@@ -34,4 +34,16 @@ GPUBFCAllocator::GPUBFCAllocator(CudaGpuId cuda_gpu_id, size_t total_memory,
               GpuIdUtil::ExecutorForCudaGpuId(cuda_gpu_id).ValueOrDie()),
           total_memory, gpu_options.allow_growth(), name) {}
 
+GPUBFCAllocator::GPUBFCAllocator(perftools::gputools::StreamExecutor* stream_exec,
+		CudaGpuId cuda_gpu_id, size_t total_memory,
+                                 const string& name)
+    : GPUBFCAllocator(stream_exec, cuda_gpu_id, total_memory, GPUOptions(), name) {}
+
+GPUBFCAllocator::GPUBFCAllocator(perftools::gputools::StreamExecutor* stream_exec,
+		CudaGpuId cuda_gpu_id, size_t total_memory,
+                                 const GPUOptions& gpu_options,
+                                 const string& name)
+    : BFCAllocator(
+          new GPUMemAllocator(stream_exec),
+          total_memory, gpu_options.allow_growth(), name) {}
 }  // namespace tensorflow

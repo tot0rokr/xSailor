@@ -27,6 +27,7 @@ limitations under the License.
 #include "tensorflow/core/common_runtime/graph_optimizer.h"
 #include "tensorflow/core/common_runtime/memory_types.h"
 #include "tensorflow/core/common_runtime/optimization_registry.h"
+#include "tensorflow/core/common_runtime/session_run_action_registry.h"
 #include "tensorflow/core/common_runtime/step_stats_collector.h"
 #include "tensorflow/core/framework/function.h"
 #include "tensorflow/core/framework/graph.pb_text.h"
@@ -439,6 +440,8 @@ Status DirectSession::Run(const RunOptions& run_options,
                           const std::vector<string>& target_nodes,
                           std::vector<Tensor>* outputs,
                           RunMetadata* run_metadata) {
+  const uint64 start_time_usecs = tensorflow::Env::Default()->NowMicros();
+
   TF_RETURN_IF_ERROR(CheckNotClosed());
   direct_session_runs->GetCell()->IncrementBy(1);
   {
@@ -463,6 +466,14 @@ Status DirectSession::Run(const RunOptions& run_options,
   }
   thread::ThreadPool* pool =
       thread_pools_[run_options.inter_op_thread_pool()].first;
+
+
+  // Running all pre session run action in grouping
+  SessionRunActionOptions action_options;
+  action_options.device_mgr = &device_mgr_;
+  action_options.sess_ptr = this;
+  TF_RETURN_IF_ERROR(SessionRunActionRegistry::Global()->RunGrouping(
+      SessionRunActionRegistry::PRE_SESSION_RUN, action_options));
 
   // Check if we already have an executor for these arguments.
   ExecutorsAndKeys* executors_and_keys;
@@ -705,6 +716,17 @@ Status DirectSession::Run(const RunOptions& run_options,
       exec_and_lib.graph->ToGraphDef(partition_graph_def);
     }
   }
+
+  // TODO(TOT0RoKR): This is not implemented in this version
+  // metrics::UpdateGraphExecTime(time_duration_usecs);
+
+  // Running all post session run action in grouping
+  uint64 session_end_time = tensorflow::Env::Default()->NowMicros();
+  const uint64 time_duration_usecs = session_end_time - start_time_usecs;
+  action_options.sess_duration_us = time_duration_usecs;
+  action_options.graph_id = reinterpret_cast<uint64>(executors_and_keys);
+  TF_RETURN_IF_ERROR(SessionRunActionRegistry::Global()->RunGrouping(
+      SessionRunActionRegistry::POST_SESSION_RUN, action_options));
 
   return Status::OK();
 }

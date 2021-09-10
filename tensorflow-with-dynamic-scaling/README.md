@@ -1,3 +1,7 @@
+# README
+
+This repository is combined TF v1.6.0 and [AntMan](https://github.com/alibaba/GPU-scheduler-for-deep-learning)
+
 <div align="center">
   <img src="https://www.tensorflow.org/images/tf_logo_transp.png"><br><br>
 </div>

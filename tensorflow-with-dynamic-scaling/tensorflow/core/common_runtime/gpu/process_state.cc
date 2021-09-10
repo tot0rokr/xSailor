@@ -24,6 +24,7 @@ limitations under the License.
 #include "tensorflow/core/common_runtime/gpu/gpu_id.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_id_utils.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_init.h"
+#include "tensorflow/core/common_runtime/gpu/gpu_vmem_allocator.h"
 #include "tensorflow/core/common_runtime/gpu/pool_allocator.h"
 #include "tensorflow/core/framework/allocator.h"
 #include "tensorflow/core/framework/log_memory.h"
@@ -125,9 +126,28 @@ Allocator* ProcessState::GetGPUAllocator(const GPUOptions& options,
     }
 
     const CudaGpuId cuda_gpu_id = GpuIdUtil::TfToCudaGpuId(tf_gpu_id);
+    // If there are any pending AllocVisitors for this bus, add
+    // them now.
+    gpu::StreamExecutor* se =
+        GpuIdUtil::ExecutorForTfGpuId(tf_gpu_id).ValueOrDie();
+    int bus_id = se->GetDeviceDescription().numa_node();
+    if (bus_id >= 0 && bus_id < static_cast<int64>(gpu_visitors_.size())) {
+      for (const auto& v : gpu_visitors_[bus_id]) {
+        gpu_allocator->AddAllocVisitor(v);
+      }
+    }
+
     gpu_allocator =
-        new GPUBFCAllocator(cuda_gpu_id, total_bytes, options,
+        new GPUBFCAllocator(se, cuda_gpu_id, total_bytes, options,
                             strings::StrCat("GPU_", tf_gpu_id.value(), "_bfc"));
+
+    // GPUVMemAllocator will allocate host memory as backup after running out of
+    // gpu device memory to avoid OOM failures
+    gpu_allocator = maybe_create_gpu_vmem_allocator(gpu_allocator,
+                                                        bus_id,
+                                                        cuda_gpu_id,
+                                                        tf_gpu_id.value(),
+                                                        se);
 
     // If true, checks for memory overwrites by writing
     // distinctive patterns on both ends of allocated memory.
@@ -142,16 +162,6 @@ Allocator* ProcessState::GetGPUAllocator(const GPUOptions& options,
     }
     gpu_allocators_[tf_gpu_id.value()] = gpu_allocator;
 
-    // If there are any pending AllocVisitors for this bus, add
-    // them now.
-    gpu::StreamExecutor* se =
-        GpuIdUtil::ExecutorForTfGpuId(tf_gpu_id).ValueOrDie();
-    int bus_id = se->GetDeviceDescription().numa_node();
-    if (bus_id >= 0 && bus_id < static_cast<int64>(gpu_visitors_.size())) {
-      for (const auto& v : gpu_visitors_[bus_id]) {
-        gpu_allocator->AddAllocVisitor(v);
-      }
-    }
     if (FLAGS_brain_gpu_record_mem_types) {
       MemDesc md;
       md.loc = MemDesc::GPU;

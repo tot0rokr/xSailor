@@ -341,6 +341,8 @@ cc_library(
         "//tensorflow/core:master_proto_cc",
         "//tensorflow/core:protos_all_cc",
         "//tensorflow/core/debug:debug_graph_utils",
+        "//tensorflow/contrib/resource_management:gpu_resource_management",
+        "//tensorflow/contrib/resource_management:gpu_statistics",
     ],
 )
 

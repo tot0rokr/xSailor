@@ -43,6 +43,12 @@ class GPUBFCAllocator : public BFCAllocator {
                   const string& name);
   GPUBFCAllocator(CudaGpuId cuda_gpu_id, size_t total_memory,
                   const GPUOptions& gpu_options, const string& name);
+  GPUBFCAllocator(perftools::gputools::StreamExecutor* stream_exec,
+		  CudaGpuId cuda_gpu_id, size_t total_memory,
+                  const string& name);
+  GPUBFCAllocator(perftools::gputools::StreamExecutor* stream_exec,
+		  CudaGpuId cuda_gpu_id, size_t total_memory,
+                  const GPUOptions& gpu_options, const string& name);
   virtual ~GPUBFCAllocator() {}
 
   TF_DISALLOW_COPY_AND_ASSIGN(GPUBFCAllocator);

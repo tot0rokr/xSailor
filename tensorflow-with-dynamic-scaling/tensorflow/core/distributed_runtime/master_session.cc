@@ -1594,6 +1594,14 @@ Status MasterSession::DoRunWithLocalExecution(
   int64 count = 0;
   TF_RETURN_IF_ERROR(StartStep(bgopts, &count, &rcg, false));
 
+  // Running all pre session run action in grouping.
+  uint64 session_start_time = tensorflow::Env::Default()->NowMicros();
+  SessionRunActionOptions action_options;
+  action_options.device_set = &devices_;
+  action_options.sess_ptr = this;
+  TF_RETURN_IF_ERROR(SessionRunActionRegistry::Global()->RunGrouping(
+      SessionRunActionRegistry::PRE_SESSION_RUN, action_options));
+
   // Unref "rcg" when out of scope.
   core::ScopedUnref unref(rcg);
 
@@ -1636,6 +1644,14 @@ Status MasterSession::DoRunWithLocalExecution(
 
   Status s = rcg->RunPartitions(env_, step_id, count, &pss, opts, req, resp,
                                 &cancellation_manager_, false);
+  // Running all post session run action in grouping.
+  uint64 session_end_time = tensorflow::Env::Default()->NowMicros();
+  action_options.device_set = &devices_;
+  action_options.sess_duration_us = session_end_time - session_start_time;
+  action_options.graph_id = HashBuildGraphOptions(bgopts);
+  TF_RETURN_IF_ERROR(SessionRunActionRegistry::Global()->RunGrouping(
+      SessionRunActionRegistry::POST_SESSION_RUN, action_options));
+
   if (s.ok()) {
     pss.end_micros = Env::Default()->NowMicros();
 

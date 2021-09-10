@@ -2043,7 +2043,6 @@ CORE_CPU_LIB_HEADERS = CORE_CPU_BASE_HDRS + [
     "common_runtime/rendezvous_mgr.h",
     "common_runtime/rendezvous_util.h",
     "common_runtime/session_factory.h",
-    "common_runtime/session_run_action_registry.h",
     "common_runtime/placer.h",
     "common_runtime/stats_publisher_interface.h",
     "common_runtime/step_stats_collector.h",
@@ -2085,7 +2084,6 @@ tf_cuda_library(
         "common_runtime/session.cc",
         "common_runtime/session_factory.cc",
         "common_runtime/session_options.cc",
-        "common_runtime/session_run_action_registry.cc",
         "common_runtime/session_state.cc",
         "common_runtime/stats_publisher_interface.cc",
         "common_runtime/step_stats_collector.cc",
@@ -2111,7 +2109,6 @@ tf_cuda_library(
         ":protos_all_cc",
         "//third_party/eigen3",
         "//tensorflow/core/grappler:grappler_item",
-        "//tensorflow/contrib/resource_management:gpu_resource_management",
     ] + if_mkl(
         [
             "//third_party/mkl:intel_binary_blob",
@@ -2198,8 +2195,6 @@ tf_cuda_library(
         ":protos_all_cc",
         "//tensorflow/core/debug:debug_graph_utils",
         "//tensorflow/core/kernels:function_ops",
-        "//tensorflow/contrib/resource_management:gpu_resource_management",
-        "//tensorflow/contrib/resource_management:gpu_statistics",
     ],
     alwayslink = 1,
 )
@@ -2239,7 +2234,6 @@ tf_cuda_library(
 )
 
 GPU_RUNTIME_HEADERS = [
-    "common_runtime/gpu/gpu_adjustable_allocator.h",
     "common_runtime/gpu/gpu_bfc_allocator.h",
     "common_runtime/gpu/gpu_cudamalloc_allocator.h",
     "common_runtime/gpu/gpu_debug_allocator.h",
@@ -2252,14 +2246,12 @@ GPU_RUNTIME_HEADERS = [
     "common_runtime/gpu/gpu_util.h",
     "common_runtime/gpu/pool_allocator.h",
     "common_runtime/gpu/process_state.h",
-    "common_runtime/gpu/gpu_vmem_allocator.h",
     "common_runtime/gpu_device_context.h",
 ]
 
 tf_cuda_library(
     name = "gpu_runtime_impl",
     srcs = [
-        "common_runtime/gpu/gpu_adjustable_allocator.cc",
         "common_runtime/gpu/gpu_bfc_allocator.cc",
         "common_runtime/gpu/gpu_cudamalloc_allocator.cc",
         "common_runtime/gpu/gpu_debug_allocator.cc",
@@ -2269,7 +2261,6 @@ tf_cuda_library(
         "common_runtime/gpu/gpu_managed_allocator.cc",
         "common_runtime/gpu/gpu_stream_util.cc",
         "common_runtime/gpu/gpu_util.cc",
-        "common_runtime/gpu/gpu_vmem_allocator.cc",
         "common_runtime/gpu/gpu_util_platform_specific.cc",
         "common_runtime/gpu/pool_allocator.cc",
         "common_runtime/gpu/process_state.cc",
@@ -2672,7 +2663,6 @@ tf_cc_tests(
         "common_runtime/pending_counts_test.cc",
         "common_runtime/placer_test.cc",
         "common_runtime/session_test.cc",
-        "common_runtime/session_run_action_registry_test.cc",
         "example/feature_util_test.cc",
         "framework/allocator_test.cc",
         "framework/attr_value_util_test.cc",
@@ -2880,12 +2870,10 @@ tf_cc_tests_gpu(
     name = "gpu_related_tests",
     size = "small",
     srcs = glob(["user_ops/**/*_test.cc"]) + [
-        "common_runtime/gpu/gpu_adjustable_allocator_test.cc",
         "common_runtime/gpu/gpu_bfc_allocator_test.cc",
         "common_runtime/gpu/gpu_device_test.cc",
         "common_runtime/gpu/gpu_id_utils_test.cc",
         "common_runtime/gpu/gpu_event_mgr_test.cc",
-        "common_runtime/gpu/gpu_vmem_allocator_test.cc",
         "common_runtime/gpu/pool_allocator_test.cc",
     ],
     linkstatic = tf_kernel_tests_linkstatic(),
