@@ -15,7 +15,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA
 
-#include "tensorflow/core/common_runtime/gpu/gpu_host_allocator.h"
+#include "tensorflow/core/common_runtime/gpu/pool_allocator.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_vmem_allocator.h"
 
@@ -38,14 +38,15 @@ namespace tensorflow {
 namespace {
 
 static void CheckStats(Allocator* a, int64 num_allocs, int64 bytes_in_use,
-                       int64 peak_bytes_in_use, int64 largest_alloc_size) {
-  absl::optional<AllocatorStats> stats;
-  stats = a->GetStats();
+                       int64 max_bytes_in_use, int64 max_alloc_size) {
+  AllocatorStats ast;
+  AllocatorStats* stats = &ast;
+  a->GetStats(stats);
   LOG(INFO) << "Alloc stats: " << std::endl << stats->DebugString();
   EXPECT_EQ(stats->bytes_in_use, bytes_in_use);
-  EXPECT_EQ(stats->peak_bytes_in_use, peak_bytes_in_use);
+  EXPECT_EQ(stats->max_bytes_in_use, max_bytes_in_use);
   EXPECT_EQ(stats->num_allocs, num_allocs);
-  EXPECT_EQ(stats->largest_alloc_size, largest_alloc_size);
+  EXPECT_EQ(stats->max_alloc_size, max_alloc_size);
 }
 
 TEST(GPUVMemAllocatorTest, VMemCreate) {

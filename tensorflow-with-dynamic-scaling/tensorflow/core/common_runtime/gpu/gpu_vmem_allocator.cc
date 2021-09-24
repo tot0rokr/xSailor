@@ -16,7 +16,7 @@ limitations under the License.
 #include "tensorflow/core/common_runtime/gpu/gpu_vmem_allocator.h"
 #include "tensorflow/core/common_runtime/allocator_retry.h"
 #include "tensorflow/core/common_runtime/bfc_allocator.h"
-#include "tensorflow/core/common_runtime/gpu/gpu_host_allocator.h"
+#include "tensorflow/core/common_runtime/gpu/pool_allocator.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_id.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_id_utils.h"
 #include "tensorflow/core/platform/thread_annotations.h"
@@ -53,11 +53,12 @@ void* GPUVMemAllocator::AllocateRaw(size_t alignment, size_t num_bytes,
       device_ptrs_.insert(ret);
       return ret;
     }
-    absl::optional<AllocatorStats> stats;
-    stats = this->GetStats();
-    if (stats->peak_bytes_in_use > memory_planned_) {
+    AllocatorStats ast;
+    AllocatorStats* stats = &ast;
+    this->GetStats(stats);
+    if (stats->max_bytes_in_use > memory_planned_) {
       LOG(ERROR) << "Host memory allocation failed: this job has already used"
-                 << (stats->peak_bytes_in_use/1024.0/1024)
+                 << (stats->max_bytes_in_use/1024.0/1024)
                  << " MiB memory which is beyound the upper limit of "
                  << "memory allocation ("
                  << (memory_planned_/1024.0/1024) << "MiB).";
@@ -106,11 +107,12 @@ int64 GPUVMemAllocator::AllocationId(const void* ptr) const {
     }
 }
 
-absl::optional<AllocatorStats> GPUVMemAllocator::GetStats() {
-    absl::optional<AllocatorStats> stats = device_allocator_->GetStats();
-    absl::optional<AllocatorStats> allocator_stats = host_allocator_->GetStats();
-    stats->peak_bytes_in_use += (allocator_stats ? allocator_stats->peak_bytes_in_use : 0);
-    return stats;
+void GPUVMemAllocator::GetStats(AllocatorStats* stats) {
+    AllocatorStats temp_stats;
+    AllocatorStats* allocator_stats = &temp_stats;
+    device_allocator_->GetStats(stats);
+    host_allocator_->GetStats(allocator_stats);
+    stats->max_bytes_in_use += (allocator_stats ? allocator_stats->max_bytes_in_use : 0);
 }
 
 void GPUVMemAllocator::ClearStats() {
@@ -118,7 +120,7 @@ void GPUVMemAllocator::ClearStats() {
     host_allocator_->ClearStats();
 }
 
-Allocator* maybe_create_gpu_vmem_allocator(Allocator* gpu_allocator,
+VisitableAllocator* maybe_create_gpu_vmem_allocator(VisitableAllocator* gpu_allocator,
                                            int bus_id,
                                            CudaGpuId platform_gpu_id,
                                            int tf_gpu_id,
@@ -147,7 +149,7 @@ Allocator* maybe_create_gpu_vmem_allocator(Allocator* gpu_allocator,
       new BFCAllocator(sub_allocator, cuda_host_mem_limit,
                        true /*allow_growth*/,
                        strings::StrCat("GPUHost_", tf_gpu_id, "_bfc"));
-  Allocator* gpu_vmem_allocator = new GPUVMemAllocator(gpu_allocator,
+  VisitableAllocator* gpu_vmem_allocator = new GPUVMemAllocator(gpu_allocator,
                                                        host_allocator,
                                                        tf_gpu_id,
                                                        stream_exec);

@@ -169,11 +169,12 @@ TEST(GPUResourceManagement, ParseAndAdjustMemoryLimit) {
   rm->ParseManageInfoFromJson(GenerateJson(ut->GetGPUName(), cur_limit));
   rm->RunAction(action_options);
 
-  absl::optional<AllocatorStats> stats;
+  AllocatorStats ast;
+  AllocatorStats* stats = &ast;
   GPUVMemAllocator * a = GetVMemAllocatorFromDevice(&p, ut->GetGPUName());
   EXPECT_NE(a, nullptr);
-  stats = a->DeviceAllocator()->GetStats();
-  EXPECT_EQ(*stats->bytes_limit, cur_limit);
+  a->DeviceAllocator()->GetStats(stats);
+  EXPECT_EQ(stats->bytes_limit, cur_limit);
 
   cur_limit = 1024 * 1024 * 1024 * 2UL;
   rm->ParseManageInfoFromJson(GenerateJson(ut->GetGPUName(), cur_limit));
@@ -181,8 +182,8 @@ TEST(GPUResourceManagement, ParseAndAdjustMemoryLimit) {
 
   a = GetVMemAllocatorFromDevice(&p, ut->GetGPUName());
   EXPECT_NE(a, nullptr);
-  stats = a->DeviceAllocator()->GetStats();
-  EXPECT_EQ(*stats->bytes_limit, cur_limit);
+  a->DeviceAllocator()->GetStats(stats);
+  EXPECT_EQ(stats->bytes_limit, cur_limit);
 
 #endif  // GOOGLE_CUDA
 }

@@ -267,6 +267,11 @@ class BFCAllocator : public VisitableAllocator {
       regions_.insert(entry, AllocationRegion(ptr, memory_size));
     }
 
+    std::vector<AllocationRegion>::iterator RemoveAllocationRegion(
+        std::vector<AllocationRegion>::iterator it) {
+      return regions_.erase(it);
+    }
+
     ChunkHandle get_handle(const void* p) const {
       return RegionFor(p)->get_handle(p);
     }
@@ -304,7 +309,7 @@ class BFCAllocator : public VisitableAllocator {
   };
 
   // Returns 'bytes' rounded up to the next highest kMinAllocationSize.
-  size_t RoundedBytes(size_t bytes);
+  static size_t RoundedBytes(size_t bytes);
 
   // Try to add a new memory region that can satisfy an allocation of
   // 'rounded_bytes' bytes.  Returns true on success and false on

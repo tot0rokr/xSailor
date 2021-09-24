@@ -76,16 +76,18 @@ bool GPUVMemAllocatorStatus::CheckChanged(
 }
 
 void GPUVMemAllocatorStatus::Update() {
-  absl::optional<AllocatorStats> host_stats;
-  absl::optional<AllocatorStats> device_stats;
-  host_stats = vmem_allocator->HostAllocator()->GetStats();
+  AllocatorStats hast;
+  AllocatorStats dast;;
+  AllocatorStats* host_stats = &hast;
+  AllocatorStats* device_stats = &dast;
+  vmem_allocator->HostAllocator()->GetStats(host_stats);
   Allocator* device_allocator = vmem_allocator->DeviceAllocator();
-  device_stats = device_allocator->GetStats();
-  deviceMemUsedMax = device_stats->peak_bytes_in_use;
+  device_allocator->GetStats(device_stats);
+  deviceMemUsedMax = device_stats->max_bytes_in_use;
   deviceMemUsedMin = device_stats->bytes_in_use;
-  hostMemUsedMax = host_stats->peak_bytes_in_use;
+  hostMemUsedMax = host_stats->max_bytes_in_use;
   hostMemUsedMin = host_stats->bytes_in_use;
-  hostMemPoolSize = *host_stats->bytes_limit;
+  hostMemPoolSize = host_stats->bytes_limit;
 
   BFCAllocator * device_bfc_allocator =
       dynamic_cast<BFCAllocator *>(device_allocator);
@@ -316,12 +318,16 @@ void GPUStatistics::dumpGPUStatistics() {
   dump_json["miniBatchDuration"] = Json::UInt64(max_duration);
   dump_json["Durations"] = sess_json;
 
-  Json::StreamWriterBuilder stream_writer;
-  std::unique_ptr<Json::StreamWriter> writer(stream_writer.newStreamWriter());
+  // Json::StreamWriterBuilder stream_writer;
+  // std::unique_ptr<Json::StreamWriter> writer(stream_writer.newStreamWriter());
+  Json::StyledWriter writer;
+  std::string output = writer.write(dump_json);
   std::ofstream statistics_file;
   statistics_file.open(gpu_statistics_file_);
-  writer->write(dump_json, &statistics_file);
+  // writer->write(dump_json, &statistics_file);
+  statistics_file.write(output.c_str(), output.size());
   statistics_file.close();
+
   // LOG(INFO) << "gpu_statistics_file updated.";
 }
 

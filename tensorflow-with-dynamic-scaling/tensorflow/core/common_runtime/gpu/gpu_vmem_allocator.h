@@ -18,20 +18,24 @@ limitations under the License.
 
 #include "tensorflow/core/framework/allocator.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_id.h"
+#include "tensorflow/core/common_runtime/visitable_allocator.h"
 #include "tensorflow/core/platform/stream_executor.h"
 #include "tensorflow/core/util/env_var.h"
+
+namespace se = ::perftools::gputools;
 
 namespace tensorflow {
 
 // GPUVMemAllocator is an encapsulation of
 // GPUBFCAllocator & GPUHostBFCAllocator
-class GPUVMemAllocator : public Allocator {
+class GPUVMemAllocator : public VisitableAllocator {
  public:
-  GPUVMemAllocator(Allocator* device_allocator,
+  GPUVMemAllocator(VisitableAllocator* device_allocator,
                    Allocator* host_allocator,
                    int device_id,
                    se::StreamExecutor* stream_exec) {
     name_ = strings::StrCat("GPUVMem_", device_id, "_bfc");
+    base_allocator_ = device_allocator;
     device_allocator_ = device_allocator;
     host_allocator_ = host_allocator;
     int64 total_memory = 0;
@@ -69,7 +73,7 @@ class GPUVMemAllocator : public Allocator {
 
   int64 AllocationId(const void* ptr) const override;
 
-  absl::optional<AllocatorStats> GetStats() override;
+  void GetStats(AllocatorStats* stats) override;
 
   void ClearStats() override;
 
@@ -79,8 +83,18 @@ class GPUVMemAllocator : public Allocator {
 
   TF_DISALLOW_COPY_AND_ASSIGN(GPUVMemAllocator);
 
+
+  void AddAllocVisitor(Visitor visitor) override {
+    return base_allocator_->AddAllocVisitor(visitor);
+  }
+  void AddFreeVisitor(Visitor visitor) override {
+    return base_allocator_->AddFreeVisitor(visitor);
+  }
+
+
  private:
   string name_;
+  VisitableAllocator* base_allocator_ = nullptr;  // owned
   Allocator* device_allocator_;
   Allocator* host_allocator_;
   mutable mutex lock_;
@@ -88,7 +102,7 @@ class GPUVMemAllocator : public Allocator {
   int64 memory_planned_;
 };
 
-Allocator* maybe_create_gpu_vmem_allocator(Allocator* gpu_allocator,
+VisitableAllocator* maybe_create_gpu_vmem_allocator(VisitableAllocator* gpu_allocator,
                                            int bus_id,
                                            CudaGpuId platform_gpu_id,
                                            int tf_gpu_id,

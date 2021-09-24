@@ -139,9 +139,11 @@ bool GPUUsageAdjustment::AdjustMemLimit(const std::string& gpu_pci_bus_id,
     usage_info.gpu_allocator_ = allo;
     usage_info.cur_limit_.mem_limit_ = ULONG_MAX;
     // Get the VGPU_MEMORY_LIMIT
-    absl::optional<AllocatorStats> device_stats = allo->GetStats();
+    AllocatorStats ast;
+    AllocatorStats* device_stats = &ast;
+    allo->GetStats(device_stats);
     usage_info.cur_limit_.initial_mem_limit_ = 
-      device_stats ? *device_stats->bytes_limit : ULONG_MAX;
+      device_stats ? device_stats->bytes_limit : ULONG_MAX;
 
     auto ret = cur_usage_info_.emplace(gpu_pci_bus_id, usage_info);
     if (ret.second == false) {

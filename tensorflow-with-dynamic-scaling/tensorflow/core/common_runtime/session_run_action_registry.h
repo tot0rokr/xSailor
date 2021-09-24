@@ -24,6 +24,7 @@ limitations under the License.
 #include <vector>
 
 #include "tensorflow/core/common_runtime/device_set.h"
+#include "tensorflow/core/common_runtime/device_mgr.h"
 #include "tensorflow/core/graph/graph.h"
 
 namespace tensorflow {
