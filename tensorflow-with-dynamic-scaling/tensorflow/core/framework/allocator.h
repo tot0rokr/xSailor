@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <limits>
 
+#include "absl/types/optional.h"
 #include "tensorflow/core/framework/numeric_types.h"
 #include "tensorflow/core/framework/resource_handle.h"
 #include "tensorflow/core/framework/type_traits.h"
@@ -100,6 +101,65 @@ class Allocator {
   // Deallocate a block of memory pointer to by "ptr"
   // REQUIRES: "ptr" was previously returned by a call to AllocateRaw
   virtual void DeallocateRaw(void* ptr) = 0;
+
+  // Returns true if this allocator tracks the sizes of allocations.
+  // RequestedSize and AllocatedSize must be overridden if
+  // TracksAllocationSizes is overridden to return true.
+  virtual bool TracksAllocationSizes() const { return false; }
+
+
+  // Returns true if this allocator allocates an opaque handle rather than the
+  // requested number of bytes.
+  //
+  // This method returns false for most allocators, but may be used by
+  // special-case allocators that track tensor usage. If this method returns
+  // true, AllocateRaw() should be invoked for all values of `num_bytes`,
+  // including 0.
+  //
+  // NOTE: It is the caller's responsibility to track whether an allocated
+  // object is a buffer or an opaque handle. In particular, when this method
+  // returns `true`, users of this allocator must not run any constructors or
+  // destructors for complex objects, since there is no backing store for the
+  // tensor in which to place their outputs.
+  virtual bool AllocatesOpaqueHandle() const { return false; }
+
+  // Returns the user-requested size of the data allocated at
+  // 'ptr'.  Note that the actual buffer allocated might be larger
+  // than requested, but this function returns the size requested by
+  // the user.
+  //
+  // REQUIRES: TracksAllocationSizes() is true.
+  //
+  // REQUIRES: 'ptr!=nullptr' and points to a buffer previously
+  // allocated by this allocator.
+  virtual size_t RequestedSize(const void* ptr) const {
+    CHECK(false) << "allocator doesn't track sizes";
+    return size_t(0);
+  }
+
+  // Returns the allocated size of the buffer at 'ptr' if known,
+  // otherwise returns RequestedSize(ptr). AllocatedSize(ptr) is
+  // guaranteed to be >= RequestedSize(ptr).
+  //
+  // REQUIRES: TracksAllocationSizes() is true.
+  //
+  // REQUIRES: 'ptr!=nullptr' and points to a buffer previously
+  // allocated by this allocator.
+  virtual size_t AllocatedSize(const void* ptr) const {
+    return RequestedSize(ptr);
+  }
+
+  // Returns either 0 or an identifier assigned to the buffer at 'ptr'
+  // when the buffer was returned by AllocateRaw. If non-zero, the
+  // identifier differs from every other ID assigned by this
+  // allocator.
+  //
+  // REQUIRES: TracksAllocationSizes() is true.
+  //
+  // REQUIRES: 'ptr!=nullptr' and points to a buffer previously
+  // allocated by this allocator.
+  virtual int64 AllocationId(const void* ptr) const { return 0; }
+
 
   // Convenience functions to do typed allocation.  C++ constructors
   // and destructors are invoked for complex types if necessary,
@@ -197,6 +257,7 @@ class Allocator {
 
   // Fills in 'stats' with statistics collected by this allocator.
   virtual void GetStats(AllocatorStats* stats) { stats->Clear(); }
+  virtual absl::optional<AllocatorStats> GetStats() { return absl::nullopt; }
 
   // Clears the internal stats except for the `in_use` field.
   virtual void ClearStats() {}

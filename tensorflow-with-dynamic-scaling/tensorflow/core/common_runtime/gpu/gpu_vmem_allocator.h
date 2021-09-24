@@ -21,6 +21,8 @@ limitations under the License.
 #include "tensorflow/core/platform/stream_executor.h"
 #include "tensorflow/core/util/env_var.h"
 
+namespace se = ::perftools::gputools;
+
 namespace tensorflow {
 
 // GPUVMemAllocator is an encapsulation of
