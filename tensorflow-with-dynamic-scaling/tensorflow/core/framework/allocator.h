@@ -20,7 +20,6 @@ limitations under the License.
 
 #include <limits>
 
-#include "absl/types/optional.h"
 #include "tensorflow/core/framework/numeric_types.h"
 #include "tensorflow/core/framework/resource_handle.h"
 #include "tensorflow/core/framework/type_traits.h"
@@ -257,7 +256,6 @@ class Allocator {
 
   // Fills in 'stats' with statistics collected by this allocator.
   virtual void GetStats(AllocatorStats* stats) { stats->Clear(); }
-  virtual absl::optional<AllocatorStats> GetStats() { return absl::nullopt; }
 
   // Clears the internal stats except for the `in_use` field.
   virtual void ClearStats() {}

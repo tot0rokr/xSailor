@@ -53,11 +53,12 @@ void* GPUVMemAllocator::AllocateRaw(size_t alignment, size_t num_bytes,
       device_ptrs_.insert(ret);
       return ret;
     }
-    absl::optional<AllocatorStats> stats;
-    stats = this->GetStats();
-    if (stats->peak_bytes_in_use > memory_planned_) {
+    AllocatorStats ast;
+    AllocatorStats* stats = &ast;
+    stats = this->GetStats(stats);
+    if (stats->max_bytes_in_use > memory_planned_) {
       LOG(ERROR) << "Host memory allocation failed: this job has already used"
-                 << (stats->peak_bytes_in_use/1024.0/1024)
+                 << (stats->max_bytes_in_use/1024.0/1024)
                  << " MiB memory which is beyound the upper limit of "
                  << "memory allocation ("
                  << (memory_planned_/1024.0/1024) << "MiB).";
@@ -106,11 +107,11 @@ int64 GPUVMemAllocator::AllocationId(const void* ptr) const {
     }
 }
 
-absl::optional<AllocatorStats> GPUVMemAllocator::GetStats() {
-    absl::optional<AllocatorStats> stats = device_allocator_->GetStats();
-    absl::optional<AllocatorStats> allocator_stats = host_allocator_->GetStats();
-    stats->peak_bytes_in_use += (allocator_stats ? allocator_stats->peak_bytes_in_use : 0);
-    return stats;
+void GPUVMemAllocator::GetStats(AllocatorStats* stats) {
+    AllocatorStats allocator_stats;
+    device_allocator_->GetStats(stats);
+    host_allocator_->GetStats(&allocator_stats);
+    stats->max_bytes_in_use += (allocator_stats ? allocator_stats->max_bytes_in_use : 0);
 }
 
 void GPUVMemAllocator::ClearStats() {

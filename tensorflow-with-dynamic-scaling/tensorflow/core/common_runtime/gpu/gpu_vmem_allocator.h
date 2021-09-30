@@ -71,7 +71,7 @@ class GPUVMemAllocator : public Allocator {
 
   int64 AllocationId(const void* ptr) const override;
 
-  absl::optional<AllocatorStats> GetStats() override;
+  void GetStats(AllocatorStats* stats) override;
 
   void ClearStats() override;
 

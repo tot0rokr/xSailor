@@ -76,16 +76,18 @@ bool GPUVMemAllocatorStatus::CheckChanged(
 }
 
 void GPUVMemAllocatorStatus::Update() {
-  absl::optional<AllocatorStats> host_stats;
-  absl::optional<AllocatorStats> device_stats;
-  host_stats = vmem_allocator->HostAllocator()->GetStats();
+  AllocatorStats hast;
+  AllocatorStats dast;;
+  AllocatorStats* host_stats = &hast;
+  AllocatorStats* device_stats = &dast;
+  vmem_allocator->HostAllocator()->GetStats(host_stats);
   Allocator* device_allocator = vmem_allocator->DeviceAllocator();
-  device_stats = device_allocator->GetStats();
-  deviceMemUsedMax = device_stats->peak_bytes_in_use;
+  device_allocator->GetStats(device_stats);
+  deviceMemUsedMax = device_stats->max_bytes_in_use;
   deviceMemUsedMin = device_stats->bytes_in_use;
-  hostMemUsedMax = host_stats->peak_bytes_in_use;
+  hostMemUsedMax = host_stats->max_bytes_in_use;
   hostMemUsedMin = host_stats->bytes_in_use;
-  hostMemPoolSize = *host_stats->bytes_limit;
+  hostMemPoolSize = host_stats->bytes_limit;
 
   BFCAllocator * device_bfc_allocator =
       dynamic_cast<BFCAllocator *>(device_allocator);

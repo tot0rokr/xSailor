@@ -39,14 +39,15 @@ namespace tensorflow {
 namespace {
 
 static void CheckStats(Allocator* a, int64 num_allocs, int64 bytes_in_use,
-                       int64 peak_bytes_in_use, int64 largest_alloc_size) {
-  absl::optional<AllocatorStats> stats;
-  stats = a->GetStats();
+                       int64 max_bytes_in_use, int64 max_alloc_size) {
+  AllocatorStats ast;
+  AllocatorStats* stats = &ast;
+  a->GetStats(stats);
   LOG(INFO) << "Alloc stats: " << std::endl << stats->DebugString();
   EXPECT_EQ(stats->bytes_in_use, bytes_in_use);
-  EXPECT_EQ(stats->peak_bytes_in_use, peak_bytes_in_use);
+  EXPECT_EQ(stats->max_bytes_in_use, max_bytes_in_use);
   EXPECT_EQ(stats->num_allocs, num_allocs);
-  EXPECT_EQ(stats->largest_alloc_size, largest_alloc_size);
+  EXPECT_EQ(stats->max_alloc_size, max_alloc_size);
 }
 
 TEST(GPUAdjustableAllocatorTest, ShrinkMemoryLimitAndAllocateToHost) {
@@ -249,7 +250,7 @@ TEST(GPUAdjustableAllocatorTest, RepeatedlyShrinkAndGrowthMemoryLimit) {
 
   GPUVMemAllocator a(device_allocator, host_allocator, 0, se);
   CheckStats(&a, 0, 0, 0, 0);
-  absl::optional<AllocatorStats> stats;
+  AllocatorStats* stats;
 
   // allocate 700KB
   void *p1 = a.AllocateRaw(1, 700 * 1024);
@@ -441,7 +442,7 @@ TEST(GPUAdjustableAllocatorTest, RepeatedlyShrinkAndGrowthMemoryLimit) {
   a.DeallocateRaw(p5);
   a.DeallocateRaw(p11);
   a.DeallocateRaw(p12);
-  stats = a.GetStats();
+  a.GetStats(stats);
   // LOG(INFO) << "vmem alloc stats: " << std::endl << stats.DebugString();
   // device_allocator->GetStats(&stats);
   // LOG(INFO) << "GPU alloc stats: " << std::endl << stats.DebugString();
