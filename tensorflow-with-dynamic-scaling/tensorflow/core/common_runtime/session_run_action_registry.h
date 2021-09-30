@@ -32,7 +32,7 @@ namespace tensorflow {
 // this struct.
 struct SessionRunActionOptions {
   // The DeviceMgr contains each device in 'devices'.
-  const std::unique_ptr<const tensorflow::DeviceMgr>*
+  const std::unique_ptr<const DeviceMgr>*
       device_mgr = nullptr;   // Not owned.
 
   // The DeviceSet contains the devices known to the system.

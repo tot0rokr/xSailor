@@ -94,7 +94,7 @@ GPUBFCAllocator* GetAllocatorByPciBusId(
 }  // namespace
 
 GPUBFCAllocator* GPUUsageAdjustment::GetGPUAllocator(
-    const std::unique_ptr<const tensorflow::DeviceMgr>* device_mgr,
+    const std::unique_ptr<const DeviceMgr>* device_mgr,
     const std::unique_ptr<DeviceSet>* device_set,
     const std::string& gpu_pci_bus_id) {
 
@@ -122,7 +122,7 @@ GPUBFCAllocator* GPUUsageAdjustment::GetGPUAllocator(
 
 bool GPUUsageAdjustment::AdjustMemLimit(const std::string& gpu_pci_bus_id,
     size_t new_mem_limit,
-    const std::unique_ptr<const tensorflow::DeviceMgr>* device_mgr,
+    const std::unique_ptr<const DeviceMgr>* device_mgr,
     const std::unique_ptr<DeviceSet>* device_set) {
   mutex_lock l(adj_mu_);
 

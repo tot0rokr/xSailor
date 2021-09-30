@@ -92,7 +92,7 @@ class GPUStatistics : public SessionRunAction {
   // Check the status of each GPUVMemAllocator to determine if we
   // need to dump the statistics.
   bool CheckGPUVMemAllocatorStatistics(
-      const std::unique_ptr<const tensorflow::DeviceMgr>* device_mgr,
+      const std::unique_ptr<const DeviceMgr>* device_mgr,
       const std::unique_ptr<DeviceSet>* device_set);
 
   // Dump GPU statistics.

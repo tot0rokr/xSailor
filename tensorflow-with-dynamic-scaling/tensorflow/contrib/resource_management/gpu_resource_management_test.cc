@@ -95,7 +95,7 @@ class GPUResourceManagementTest {
     }
   }
 
-  const tensorflow::DeviceMgr* GetDeviceMgr() {
+  const DeviceMgr* GetDeviceMgr() {
     return device_mgr_;
   }
 
@@ -106,7 +106,7 @@ class GPUResourceManagementTest {
  private:
   Session* session_;
   SessionOptions options_;
-  const tensorflow::DeviceMgr* device_mgr_;
+  const DeviceMgr* device_mgr_;
   std::vector<std::unique_ptr<tensorflow::Device>> devices_;
   std::string gpu_name_;
 };
@@ -127,7 +127,7 @@ std::string GenerateJson(std::string gpu_name, size_t mem_limit) {
 }
 
 GPUVMemAllocator * GetVMemAllocatorFromDevice(
-    std::unique_ptr<const tensorflow::DeviceMgr>* p,
+    std::unique_ptr<const DeviceMgr>* p,
     const std::string gpu_name) {
   for (const auto& d : (*p)->ListDevices()) {
     if (d->device_type() != "GPU") {
@@ -161,7 +161,7 @@ TEST(GPUResourceManagement, ParseAndAdjustMemoryLimit) {
   GPUResourceManagementTest* ut = new GPUResourceManagementTest();
   GPUResourceManagement* rm = new GPUResourceManagement();
   SessionRunActionOptions action_options;
-  std::unique_ptr<const tensorflow::DeviceMgr> p(ut->GetDeviceMgr());
+  std::unique_ptr<const DeviceMgr> p(ut->GetDeviceMgr());
   action_options.device_mgr = &p;
 
   size_t cur_limit = 1024 * 1024 * 1UL;
