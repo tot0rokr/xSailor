@@ -42,12 +42,12 @@ class GPUUsageAdjustment {
   // Adjust the memory limit of the giving GPU.
   bool AdjustMemLimit(const std::string& gpu_pci_bus_id,
                       size_t new_mem_limit,
-                      const std::unique_ptr<const DeviceMgr>* device_mgr,
+                      const std::unique_ptr<const tensorflow::DeviceMgr>* device_mgr,
                       const std::unique_ptr<DeviceSet>* device_set);
 
  private:
   GPUBFCAllocator*
-      GetGPUAllocator(const std::unique_ptr<const DeviceMgr>* device_mgr,
+      GetGPUAllocator(const std::unique_ptr<const tensorflow::DeviceMgr>* device_mgr,
                       const std::unique_ptr<DeviceSet>* device_set,
                       const std::string& gpu_pci_bus_id);
 

@@ -158,7 +158,7 @@ void GPUStatistics::InitAllocatorStatus(Device* device) {
 }
 
 bool GPUStatistics::CheckGPUVMemAllocatorStatistics(
-    const std::unique_ptr<const DeviceMgr>* device_mgr,
+    const std::unique_ptr<const tensorflow::DeviceMgr>* device_mgr,
     const std::unique_ptr<DeviceSet>* device_set) {
   bool need_update = false;
 
