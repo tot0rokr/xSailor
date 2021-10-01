@@ -1738,12 +1738,12 @@ void ExecutorState::Process(TaggedNode tagged_node, int64 scheduled_usec) {
           AsyncState* state =
               new AsyncState(params, tagged_node, &item, first_input, stats);
 
-          auto async_gpu_kernel = [this, state, id, stats, op_kernel, device] {
+          auto async_gpu_kernel = [this, state, id, stats, op_kernel, device, item] {
             AsyncOpKernel* async = item.kernel->AsAsync();
             DCHECK(async != nullptr);
 
-              auto done = [this, state]() {
-                Device* device = impl_->params_.device;
+            auto done = [this, state]() {
+              Device* device = impl_->params_.device;
               NodeExecStatsWrapper* stats = state->stats;  // Shorthand
               Entry* first_input = state->first_input;     // Shorthand
 
@@ -2457,12 +2457,12 @@ void ExecutorState::Finish() {
 
   // Stop the op manager thread.
   if (gpu_op_manager_thread_ != nullptr) {
-    terminate_op_magager_thread_ = true;
+    terminate_op_manager_thread_ = true;
     if (gpu_op_manager_thread_->joinable()) {
       gpu_op_manager_thread_->join();
     }
     delete gpu_op_manager_thread_;
-    terminate_op_magager_thread_ = false;
+    terminate_op_manager_thread_ = false;
   }
 
   if (sync_on_finish_ && status.ok()) {
