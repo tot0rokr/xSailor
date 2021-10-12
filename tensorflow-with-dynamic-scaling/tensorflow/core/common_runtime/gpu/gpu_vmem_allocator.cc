@@ -108,9 +108,10 @@ int64 GPUVMemAllocator::AllocationId(const void* ptr) const {
 }
 
 void GPUVMemAllocator::GetStats(AllocatorStats* stats) {
-    AllocatorStats allocator_stats;
+    AllocatorStats temp_stats;
+    AllocatorStats* allocator_stats = &temp_stats;
     device_allocator_->GetStats(stats);
-    host_allocator_->GetStats(&allocator_stats);
+    host_allocator_->GetStats(allocator_stats);
     stats->max_bytes_in_use += (allocator_stats ? allocator_stats.max_bytes_in_use : 0);
 }
 
