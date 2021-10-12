@@ -55,7 +55,7 @@ void* GPUVMemAllocator::AllocateRaw(size_t alignment, size_t num_bytes,
     }
     AllocatorStats ast;
     AllocatorStats* stats = &ast;
-    stats = this->GetStats(stats);
+    this->GetStats(stats);
     if (stats->max_bytes_in_use > memory_planned_) {
       LOG(ERROR) << "Host memory allocation failed: this job has already used"
                  << (stats->max_bytes_in_use/1024.0/1024)
@@ -111,7 +111,7 @@ void GPUVMemAllocator::GetStats(AllocatorStats* stats) {
     AllocatorStats allocator_stats;
     device_allocator_->GetStats(stats);
     host_allocator_->GetStats(&allocator_stats);
-    stats->max_bytes_in_use += (allocator_stats ? allocator_stats->max_bytes_in_use : 0);
+    stats->max_bytes_in_use += (allocator_stats ? allocator_stats.max_bytes_in_use : 0);
 }
 
 void GPUVMemAllocator::ClearStats() {
