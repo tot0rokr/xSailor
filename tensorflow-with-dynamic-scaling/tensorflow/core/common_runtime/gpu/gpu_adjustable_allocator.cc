@@ -103,7 +103,7 @@ size_t GPUAdjustableAllocator::FreeEmptyMemory(size_t target_memory_bytes,
       size_t memory_size = ar.memory_size();
       tag.push_back(i);
       bfc_allocator->RemoveFreeChunkFromBin(h);
-      bfc_allocator->sub_allocator_->Free(p, memory_size);
+      bfc_allocator->suballocator_->Free(p, memory_size);
       CHECK_GE(bfc_allocator->total_region_allocated_bytes_, memory_size);
       bfc_allocator->total_region_allocated_bytes_ -= memory_size;
       LOG(INFO) << "free memory region: [" << p << "] size : "

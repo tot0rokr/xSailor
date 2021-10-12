@@ -231,7 +231,7 @@ void* BFCAllocator::AllocateRaw(size_t unused_alignment, size_t num_bytes,
 }
 
 // static
-size_t BFCAllocator::RoundedBytes(size_t bytes) {
+static size_t BFCAllocator::RoundedBytes(size_t bytes) {
   size_t rounded_bytes =
       (kMinAllocationSize *
        ((bytes + kMinAllocationSize - 1) / kMinAllocationSize));
