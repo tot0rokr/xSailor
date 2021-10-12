@@ -15,7 +15,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA
 
-#include "tensorflow/core/common_runtime/gpu/gpu_host_allocator.h"
+#include "tensorflow/core/common_runtime/gpu/pool_allocator.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_vmem_allocator.h"
 
