@@ -117,7 +117,7 @@ Allocator* ProcessState::GetGPUAllocator(const GPUOptions& options,
   }
 
   if (gpu_allocators_[tf_gpu_id.value()] == nullptr) {
-    VisitableAllocator* gpu_allocator;
+    Allocator* gpu_allocator;
 
     // Validate allocator types.
     if (!allocator_type.empty() && allocator_type != "BFC") {
@@ -126,16 +126,12 @@ Allocator* ProcessState::GetGPUAllocator(const GPUOptions& options,
     }
 
     const CudaGpuId cuda_gpu_id = GpuIdUtil::TfToCudaGpuId(tf_gpu_id);
+    //
     // If there are any pending AllocVisitors for this bus, add
     // them now.
     gpu::StreamExecutor* se =
         GpuIdUtil::ExecutorForTfGpuId(tf_gpu_id).ValueOrDie();
     int bus_id = se->GetDeviceDescription().numa_node();
-    if (bus_id >= 0 && bus_id < static_cast<int64>(gpu_visitors_.size())) {
-      for (const auto& v : gpu_visitors_[bus_id]) {
-        gpu_allocator->AddAllocVisitor(v);
-      }
-    }
 
     gpu_allocator =
         new GPUBFCAllocator(se, cuda_gpu_id, total_bytes, options,
@@ -161,6 +157,13 @@ Allocator* ProcessState::GetGPUAllocator(const GPUOptions& options,
       gpu_allocator = new GPUcudaMallocAllocator(gpu_allocator, cuda_gpu_id);
     }
     gpu_allocators_[tf_gpu_id.value()] = gpu_allocator;
+
+    VisitableAllocator* gpu_visitableallocator = gpu_allocator;
+    if (bus_id >= 0 && bus_id < static_cast<int64>(gpu_visitors_.size())) {
+      for (const auto& v : gpu_visitors_[bus_id]) {
+        gpu_visitableallocator->AddAllocVisitor(v);
+      }
+    }
 
     if (FLAGS_brain_gpu_record_mem_types) {
       MemDesc md;
