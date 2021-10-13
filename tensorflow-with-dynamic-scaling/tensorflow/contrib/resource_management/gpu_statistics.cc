@@ -318,12 +318,16 @@ void GPUStatistics::dumpGPUStatistics() {
   dump_json["miniBatchDuration"] = Json::UInt64(max_duration);
   dump_json["Durations"] = sess_json;
 
-  Json::StreamWriterBuilder stream_writer;
-  std::unique_ptr<Json::StreamWriter> writer(stream_writer.newStreamWriter());
+  // Json::StreamWriterBuilder stream_writer;
+  // std::unique_ptr<Json::StreamWriter> writer(stream_writer.newStreamWriter());
+  Json::StyledWriter writer;
+  std::string output = writer.write(dump_json);
   std::ofstream statistics_file;
   statistics_file.open(gpu_statistics_file_);
-  writer->write(dump_json, &statistics_file);
+  // writer->write(dump_json, &statistics_file);
+  statistics_file.write(output, output.length);
   statistics_file.close();
+
   // LOG(INFO) << "gpu_statistics_file updated.";
 }
 
