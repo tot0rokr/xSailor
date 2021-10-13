@@ -1738,8 +1738,8 @@ void ExecutorState::Process(TaggedNode tagged_node, int64 scheduled_usec) {
           AsyncState* state =
               new AsyncState(params, tagged_node, &item, first_input, stats);
 
-          auto async_gpu_kernel = [this, state, id, stats, op_kernel, device, item] {
-            AsyncOpKernel* async = item.kernel->AsAsync();
+          auto async_gpu_kernel = [this, state, id, stats, op_kernel, device] {
+            AsyncOpKernel* async = state->item.kernel->AsAsync();
             DCHECK(async != nullptr);
 
             auto done = [this, state]() {
