@@ -117,7 +117,7 @@ Allocator* ProcessState::GetGPUAllocator(const GPUOptions& options,
   }
 
   if (gpu_allocators_[tf_gpu_id.value()] == nullptr) {
-    Allocator* gpu_allocator;
+    VisitableAllocator* gpu_allocator;
 
     // Validate allocator types.
     if (!allocator_type.empty() && allocator_type != "BFC") {
@@ -158,10 +158,9 @@ Allocator* ProcessState::GetGPUAllocator(const GPUOptions& options,
     }
     gpu_allocators_[tf_gpu_id.value()] = gpu_allocator;
 
-    VisitableAllocator* gpu_visitableallocator = gpu_allocator;
     if (bus_id >= 0 && bus_id < static_cast<int64>(gpu_visitors_.size())) {
       for (const auto& v : gpu_visitors_[bus_id]) {
-        gpu_visitableallocator->AddAllocVisitor(v);
+        gpu_allocator->AddAllocVisitor(v);
       }
     }
 

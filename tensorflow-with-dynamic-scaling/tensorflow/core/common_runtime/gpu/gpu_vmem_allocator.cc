@@ -120,7 +120,7 @@ void GPUVMemAllocator::ClearStats() {
     host_allocator_->ClearStats();
 }
 
-Allocator* maybe_create_gpu_vmem_allocator(Allocator* gpu_allocator,
+VisitableAllocator* maybe_create_gpu_vmem_allocator(VisitableAllocator* gpu_allocator,
                                            int bus_id,
                                            CudaGpuId platform_gpu_id,
                                            int tf_gpu_id,
@@ -149,7 +149,7 @@ Allocator* maybe_create_gpu_vmem_allocator(Allocator* gpu_allocator,
       new BFCAllocator(sub_allocator, cuda_host_mem_limit,
                        true /*allow_growth*/,
                        strings::StrCat("GPUHost_", tf_gpu_id, "_bfc"));
-  Allocator* gpu_vmem_allocator = new GPUVMemAllocator(gpu_allocator,
+  VisitableAllocator* gpu_vmem_allocator = new GPUVMemAllocator(gpu_allocator,
                                                        host_allocator,
                                                        tf_gpu_id,
                                                        stream_exec);
