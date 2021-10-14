@@ -325,7 +325,7 @@ void GPUStatistics::dumpGPUStatistics() {
   std::ofstream statistics_file;
   statistics_file.open(gpu_statistics_file_);
   // writer->write(dump_json, &statistics_file);
-  statistics_file.write(output, output.length);
+  statistics_file.write(output, output.length());
   statistics_file.close();
 
   // LOG(INFO) << "gpu_statistics_file updated.";
