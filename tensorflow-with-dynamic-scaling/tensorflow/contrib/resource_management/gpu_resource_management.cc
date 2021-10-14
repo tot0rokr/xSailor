@@ -116,7 +116,7 @@ void GPUResourceManagement::ParseUsageLimitFromJson(const Json::Value& json) {
   }
 
   // LOG(INFO) << "Parse GPU usage limit: " << parsed_new_limit;
-  if (parsed_new_limit < 0 && parsed_new_limit > 100) {
+  if (parsed_new_limit < 0 || parsed_new_limit > 100) {
     gpu_perf_control_ = 100;
     LOG(INFO) << "Invalid new perfControl (should > 0 && < 100):"
                   << parsed_new_limit;
@@ -159,8 +159,9 @@ void GPUResourceManagement::DoSleepOrSuspend(
   } else {
     // Need to sleep a specific time after each SessionRun
     // if we don't insert enough time slots.
-    uint64 actual_sleep_time = total_time_slot_ > estimated_total_idle_time_ ?
-        (total_time_slot_ - estimated_total_idle_time_) : 0;
+    uint64 remain_time = GetEstimatedIdleTime();
+    uint64 actual_sleep_time = total_time_slot_ > remain_time ?
+        (total_time_slot_ - remain_time) : 0;
     uint64 actual_sess_run_time = sess_duration_us > actual_sleep_time ?
         (sess_duration_us - actual_sleep_time) : 1;
     uint64 total_time = actual_sess_run_time * 100 / gpu_perf_control_;
